@@ -1,0 +1,73 @@
+$ordersLastWeek = Order::where('created_at', '>', '2019-09-16')
+                        ->where('created_at', '<', '2019-09-22')
+                        ->count();
+
+$ordersLastWeek = Order::select('created_at')
+                        ->where('created_at', '>', now()->subWeek()->startOfWeek())
+                        ->where('created_at', '<', now()->subWeek()->endOfWeek())
+                        ->count();
+
+week 
+
+$ordersByWeek = Order::all()->map(function($item) {
+                        $item->week = $item->created_at->weekOfYear;
+                        $item->year = $item->created_at->year;
+                        return $item;
+                    })
+                    ->groupBy(['year', 'week'])
+                    ->map
+                        ->map(function($week) {
+                        return $week->count();
+                    });
+
+$ordersByWeek = Order::select([
+                    DB::raw('count(id) as quantity'),
+                    DB::raw('week(created_at) as week'),
+                    DB::raw('year(created_at) as year')
+                ])
+                ->groupBy(['year', 'week'])
+                ->get()
+                ->toArray();
+
+return $ordersByWeek;
+
+result 
+
+[
+    {
+        "quantity": 3,
+        "week": 36,
+        "year": 2019
+    },
+    {
+        "quantity": 2,
+        "week": 37,
+        "year": 2019
+    }
+]
+
+$ordersByWeek = Order::select([
+                    DB::raw('count(id) as quantity'),
+                    DB::raw('week(created_at) as week'),
+                    DB::raw('year(created_at) as year')
+                ])
+                ->when(request('year'), function ($query) {
+                    $query->whereYear('created_at', request('year'));
+                })
+                ->groupBy(['year', 'week'])
+                ->get()
+                ->toArray();
+
+$ordersByWeek = Order::select([
+                    DB::raw('count(id) as quantity'),
+                    DB::raw('week(created_at) as week'),
+                    DB::raw('year(created_at) as year')
+                ])
+                ->when(request('year'), function ($query) {
+                    $query->whereYear('created_at', request('year'));
+                }, function ($query) {
+                    $query->whereYear('created_at', now()->format('Y'));
+                })
+                ->groupBy(['year', 'week'])
+                ->get()
+                ->toArray();

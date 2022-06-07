@@ -1,0 +1,14 @@
+$Rspatients = DB::table('reports')
+->select(
+    DB::raw("day(created_at) as day"),
+    DB::raw("Count(*) as total_patients"))
+
+->orderBy("created_at")
+->groupBy(DB::raw("day(created_at)"))
+->get();
+
+
+$result_patients[] = ['day','Patients'];
+foreach ($Rspatients as $key => $value) {
+$result_patients[++$key] = [$value->day,$value->total_patients];
+}
